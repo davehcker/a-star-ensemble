@@ -1,3 +1,15 @@
+from sklearn.ensemble import AdaBoostClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import SGDClassifier
+from sklearn.metrics import roc_curve
+from sklearn.naive_bayes import GaussianNB
+from sklearn.naive_bayes import BernoulliNB
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.neural_network import MLPClassifier
+from sklearn.svm import SVC
+from sklearn.model_selection import train_test_split
+from sklearn.metrics.pairwise import cosine_similarity
+
 class _Ensemble:
     """Generic Ensemble class.
 
