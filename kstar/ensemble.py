@@ -60,12 +60,48 @@ class _Ensemble:
 class Ensemble():
     """Generate an ensemble model for combining multiple modalities"""
 
-    def __init__(self, X, Y, class_label=1):
-        self.X = np.array(X)
-        self.Y = np.where(np.array(Y) == class_label, 1, 0)
+    def __init__(self, X, Y, y=1, build=False):
+        self.X = X
+        self.Y = Y
+
+        self.trainX, self.trainY, self.testX, self.testY = None, None, None, None
+
+        assert len(self.X) == len(self.Y), "sizes of X and Y has to be same"
+
+        self.y = y
 
         self.trained = False
         self.optimized = False
+
+    def build_dataset(self, source_ratio=(0.5, 0.5), test_size = 0.2):
+        """ Build the dataset that would be used in training and optimization
+
+        This method takes into consideration the following steps:
+            1. A filtering on total number of examples to consider
+            2. A split between training and test set (this is further used in optimization steps)
+        Args:
+            train_instances (float, float): ratio/number of training instance to take for (self.y, !self.y)
+        """
+        source_ratio_self, source_ratio_other = source_ratio
+
+        if type(source_ratio_self) == float:
+            source_ratio_self = int(sum(np.where(self.Y == self.y, 1, 0)) * source_ratio[0])
+        if type(source_ratio_other) == float:
+            source_ratio_other = int(sum(np.where(self.Y != self.y, 1, 0)) * source_ratio[1])
+
+        source_ratio = (source_ratio_self, source_ratio_other)
+
+        x_class_self = np.random.choice(self.X[np.where(self.Y == self.y, True, False)], source_ratio_self)
+        x_class_other = np.random.choice(self.X[np.where(self.Y != self.y, True, False)], source_ratio_other)
+
+        self.trainX = np.concatenate((np.random.choice(x_class_self, source_ratio_self),
+                        np.random.choice(x_class_other, source_ratio_other)))
+
+        self.trainY = np.concatenate(([self.y for _ in range(len(x_class_self))], [0 for _ in range(len(x_class_other))]))
+
+        self.trainX, self.testX, self.trainY, self.testY = train_test_split(
+            self.trainX, self.trainY, test_size=test_size)
+
 
     def __str__(self):
         return 'Ensemble model: \nlen(X) = {}, \nTrained: {}, \nOptimized: {}'.format(
