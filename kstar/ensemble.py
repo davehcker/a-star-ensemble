@@ -63,3 +63,10 @@ class Ensemble():
     def __init__(self, X, Y, class_label=1):
         self.X = np.array(X)
         self.Y = np.where(np.array(Y) == class_label, 1, 0)
+
+        self.trained = False
+        self.optimized = False
+
+    def __str__(self):
+        return 'Ensemble model: \nlen(X) = {}, \nTrained: {}, \nOptimized: {}'.format(
+                 len(self.X), self.trained, self.optimized)
