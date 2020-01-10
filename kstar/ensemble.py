@@ -23,7 +23,28 @@ class _Ensemble:
     """
 
     def __init__(self):
-        pass
+        self.learning_models = [
+            {"algorithm": SVC,
+             "params": [
+                 {'kernel': 'linear', 'gamma': 'auto', 'degree': 3, 'class_weight': 'balanced', 'cache_size': 10}
+             ]},
+            {"algorithm": AdaBoostClassifier,
+             "params": [
+                 {'n_estimators': 100},
+             ]},
+            {"algorithm": GaussianNB},
+            {"algorithm": RandomForestClassifier,
+             "params": [
+                 {'n_estimators': 20},
+             ]},
+            {"algorithm": BernoulliNB},
+            {"algorithm": MultinomialNB},
+            {"algorithm": SGDClassifier},
+            {"algorithm": MLPClassifier,
+             "params": [
+                 {'max_iter': 1000},
+             ]},
+        ]
 
     def train(self):
         """Train self (Ensemble)
@@ -57,12 +78,12 @@ class _Ensemble:
         pass
 
 
-class Ensemble():
+class Ensemble(_Ensemble):
     """Generate an ensemble model for combining multiple modalities"""
 
     def __init__(self, X, Y, y=1, build=False):
-        self.X = X
-        self.Y = Y
+        self.X = np.array(X)
+        self.Y = np.array(Y)
 
         self.trainX, self.trainY, self.testX, self.testY = None, None, None, None
 
@@ -91,17 +112,20 @@ class Ensemble():
 
         source_ratio = (source_ratio_self, source_ratio_other)
 
-        x_class_self = np.random.choice(self.X[np.where(self.Y == self.y, True, False)], source_ratio_self)
-        x_class_other = np.random.choice(self.X[np.where(self.Y != self.y, True, False)], source_ratio_other)
+        x_class_self = np.random.choice(self.X[np.where(self.Y == self.y, True, False)], source_ratio[0])
+        x_class_other = np.random.choice(self.X[np.where(self.Y == self.y, False, True)], source_ratio[1])
 
-        self.trainX = np.concatenate((np.random.choice(x_class_self, source_ratio_self),
-                        np.random.choice(x_class_other, source_ratio_other)))
+        self.trainX = np.concatenate((np.random.choice(x_class_self, source_ratio[0]),
+                        np.random.choice(x_class_other, source_ratio[1])))
 
         self.trainY = np.concatenate(([self.y for _ in range(len(x_class_self))], [0 for _ in range(len(x_class_other))]))
 
         self.trainX, self.testX, self.trainY, self.testY = train_test_split(
             self.trainX, self.trainY, test_size=test_size)
 
+    def build_ensemble(self, models=None):
+        """ Generate an ensemble model for the ensemble """
+        print(self.learning_models)
 
     def __str__(self):
         return 'Ensemble model: \nlen(X) = {}, \nTrained: {}, \nOptimized: {}'.format(
