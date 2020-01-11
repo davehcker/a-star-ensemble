@@ -92,6 +92,8 @@ class Ensemble(_Ensemble):
         self.trainX = np.concatenate((np.random.choice(x_class_self, source_ratio[0]),
                         np.random.choice(x_class_other, source_ratio[1])))
 
+        self.trainX = np.array([np.array(_) for _ in self.trainX])
+
         self.trainY = np.concatenate(([self.y for _ in range(len(x_class_self))],
                                       [0 for _ in range(len(x_class_other))]))
 
