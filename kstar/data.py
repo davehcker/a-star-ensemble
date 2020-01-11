@@ -30,4 +30,14 @@ def pick_n(data, n):
     return data[::n]
 
 
-flip = np.flip
+data_transformations = [
+    lambda x: pad_trim(np.flip(x, axis=0), size=50)[:, 0:1].flatten(),
+    lambda x: pad_trim(np.flip(x, axis=0), size=50)[:, 1:2].flatten(),
+    lambda x: pad_trim(x, size=50)[:, 0:1].flatten(),
+    lambda x: pad_trim(x, size=50)[:, 1:2].flatten(),
+    lambda x: pad_trim(x[:5], size=50)[:, 0:2].flatten(),
+    lambda x: pad_trim(np.abs(x - x[0]))[:, 0:2].flatten(),
+    lambda x: pad_trim(np.abs(np.multiply(x - x[0], np.log(x[:, 2:]))))[:, 0:2].flatten(),
+    # PCA
+    #    lambda x: pad_trim(x, size=meanMouseSessionLength)[:, 0:2].flatten(),
+]

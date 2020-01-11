@@ -1,14 +1,9 @@
+from .data import data_transformations
+from .models import generic_models
+
 import numpy as np
 
-from sklearn.ensemble import AdaBoostClassifier
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.linear_model import SGDClassifier
-from sklearn.metrics import roc_curve
-from sklearn.naive_bayes import GaussianNB
-from sklearn.naive_bayes import BernoulliNB
-from sklearn.naive_bayes import MultinomialNB
-from sklearn.neural_network import MLPClassifier
-from sklearn.svm import SVC
+
 from sklearn.model_selection import train_test_split
 from sklearn.metrics.pairwise import cosine_similarity
 
@@ -21,30 +16,9 @@ class _Ensemble:
     Returns:
         ensemble (Ensemble): An Ensemble for the specified class k.
     """
+    data_transformations = data_transformations
 
-    def __init__(self):
-        self.learning_models = [
-            {"algorithm": SVC,
-             "params": [
-                 {'kernel': 'linear', 'gamma': 'auto', 'degree': 3, 'class_weight': 'balanced', 'cache_size': 10}
-             ]},
-            {"algorithm": AdaBoostClassifier,
-             "params": [
-                 {'n_estimators': 100},
-             ]},
-            {"algorithm": GaussianNB},
-            {"algorithm": RandomForestClassifier,
-             "params": [
-                 {'n_estimators': 20},
-             ]},
-            {"algorithm": BernoulliNB},
-            {"algorithm": MultinomialNB},
-            {"algorithm": SGDClassifier},
-            {"algorithm": MLPClassifier,
-             "params": [
-                 {'max_iter': 1000},
-             ]},
-        ]
+    learning_models = generic_models
 
     def train(self):
         """Train self (Ensemble)
@@ -118,7 +92,8 @@ class Ensemble(_Ensemble):
         self.trainX = np.concatenate((np.random.choice(x_class_self, source_ratio[0]),
                         np.random.choice(x_class_other, source_ratio[1])))
 
-        self.trainY = np.concatenate(([self.y for _ in range(len(x_class_self))], [0 for _ in range(len(x_class_other))]))
+        self.trainY = np.concatenate(([self.y for _ in range(len(x_class_self))],
+                                      [0 for _ in range(len(x_class_other))]))
 
         self.trainX, self.testX, self.trainY, self.testY = train_test_split(
             self.trainX, self.trainY, test_size=test_size)
