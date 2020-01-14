@@ -30,3 +30,17 @@ generic_models = [
              {'max_iter': 1000},
          ]},
     ]
+
+
+class SingleModel():
+    """Hold a single ML model with additional info"""
+    def __init__(self, model, dt, performance):
+        self.model = model
+        self.far = performance[0]
+        self.frr = performance[1]
+        self.tpr = performance[2]
+
+        self.dt = dt
+
+    def __str__(self):
+        return str(self.model)
