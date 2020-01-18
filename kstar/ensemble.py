@@ -55,50 +55,34 @@ class _Ensemble:
 class Ensemble(_Ensemble):
     """Generate an ensemble model for combining multiple modalities"""
 
-    def __init__(self, X, Y, y=1, build=False):
-        self.X = np.array(X)
-        self.Y = np.array(Y)
+    def __init__(self, y=1, build=False, data_transformations=None):
 
         self.trainX, self.trainY, self.testX, self.testY = None, None, None, None
 
-        assert len(self.X) == len(self.Y), "sizes of X and Y has to be same"
 
         self.y = y
 
         self.trained = False
         self.optimized = False
 
-    def build_dataset(self, source_ratio=(0.5, 0.5), test_size = 0.2):
+        if data_transformations:
+            self.data_transformations = data_transformations
+
+    def build_dataset(self, trainX, testX, trainY, testY):
         """ Build the dataset that would be used in training and optimization
 
-        This method takes into consideration the following steps:
-            1. A filtering on total number of examples to consider
-            2. A split between training and test set (this is further used in optimization steps)
-        Args:
-            train_instances (float, float): ratio/number of training instance to take for (self.y, !self.y)
         """
-        source_ratio_self, source_ratio_other = source_ratio
+        self.trainX = trainX
+        self.testX = testX
 
-        if type(source_ratio_self) == float:
-            source_ratio_self = int(sum(np.where(self.Y == self.y, 1, 0)) * source_ratio[0])
-        if type(source_ratio_other) == float:
-            source_ratio_other = int(sum(np.where(self.Y != self.y, 1, 0)) * source_ratio[1])
+        self.trainY = np.array(trainY)
+        self.testY = np.array(testY)
+        assert all([len(_)!=0 for _ in trainX]), "traind data with length 0"
+        assert all([len(_)!=0 for _ in testX]), "train data with length 0"
+        assert len(set(testY)) == 2
+        assert len(set(trainY)) == 2
+        assert self.y in trainY
 
-        source_ratio = (source_ratio_self, source_ratio_other)
-
-        x_class_self = np.random.choice(self.X[np.where(self.Y == self.y, True, False)], source_ratio[0])
-        x_class_other = np.random.choice(self.X[np.where(self.Y == self.y, False, True)], source_ratio[1])
-
-        self.trainX = np.concatenate((np.random.choice(x_class_self, source_ratio[0]),
-                        np.random.choice(x_class_other, source_ratio[1])))
-
-        self.trainX = np.array([np.array(_) for _ in self.trainX])
-
-        self.trainY = np.concatenate(([self.y for _ in range(len(x_class_self))],
-                                      [0 for _ in range(len(x_class_other))]))
-
-        self.trainX, self.testX, self.trainY, self.testY = train_test_split(
-            self.trainX, self.trainY, test_size=test_size)
 
     def build_ensemble(self, models=None):
         """ Generate an ensemble model for the ensemble """
@@ -107,3 +91,43 @@ class Ensemble(_Ensemble):
     def __str__(self):
         return 'Ensemble model: \nlen(X) = {}, \nTrained: {}, \nOptimized: {}'.format(
                  len(self.X), self.trained, self.optimized)
+
+
+def train_ensemble(ensemble: Ensemble, population=0, generations=10):
+    trainX, testX, trainY, testY = train_test_split(ensemble.trainX,
+                                                    ensemble.trainY)
+    models = []
+
+    for lm in ensemble.learning_models:
+        for param in lm.get('params', [{}]):
+            for dt in ensemble.data_transformations:
+                model = lm['algorithm']
+                model = model(**param)
+
+                model.fit([dt(_) for _ in trainX], trainY)
+
+                performance = measure_performance(
+                    testY, model.predict([dt(_) for _ in testX]))
+
+                models.append(SingleModel(model, dt, performance))
+
+    models = list(filter(lambda x: x.far != 0 and x.frr != 0, models))
+
+    for generation in range(generations):
+        print('after generation ', generation)
+
+        trainX, testX, trainY, testY = train_test_split(ensemble.trainX,
+                                                        ensemble.trainY)
+
+        for single_model in models:
+            single_model.model.fit([single_model.dt(_) for _ in trainX], trainY)
+
+            perf = measure_performance(
+                testY,
+                single_model.model.predict([single_model.dt(_) for _ in testX])
+            )
+            single_model.far += perf[0]
+            single_model.frr += perf[1]
+            single_model.tpr += perf[2]
+
+    return models
