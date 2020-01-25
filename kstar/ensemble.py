@@ -59,6 +59,7 @@ class Ensemble(_Ensemble):
 
         self.trainX, self.trainY, self.testX, self.testY = None, None, None, None
 
+        self.mean_length = None
 
         self.y = y
 
@@ -81,7 +82,11 @@ class Ensemble(_Ensemble):
         assert all([len(_)!=0 for _ in testX]), "train data with length 0"
         assert len(set(testY)) == 2
         assert len(set(trainY)) == 2
-        assert self.y in trainY
+
+        self.mean_length = int(np.mean([len(_) for _ in
+                                        list(map(lambda x: x[0],
+                                        filter(lambda x: x[1] == 1,
+                                        zip(self.testX, self.testY))))]))
 
 
     def build_ensemble(self, models=None):
