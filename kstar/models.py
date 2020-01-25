@@ -8,6 +8,9 @@ from sklearn.naive_bayes import MultinomialNB
 from sklearn.neural_network import MLPClassifier
 from sklearn.svm import SVC
 
+from sklearn.model_selection import train_test_split
+
+
 generic_models = [
         {"algorithm": SVC,
          "params": [
@@ -82,6 +85,8 @@ class SingleModel():
         self.tpr = performance[2]
 
         self.dt = dt
+
+        self.train = 1 #number of train instances
 
     def __str__(self):
         return str(self.model)
