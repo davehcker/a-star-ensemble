@@ -35,7 +35,7 @@ generic_models = [
     ]
 
 
-def measure_performance(actual, prediction):
+def measure_performance(actual, prediction, verbose=False):
     """
     Return a performance breakdown in the form FAR, FRR and TPR
 
@@ -67,6 +67,9 @@ def measure_performance(actual, prediction):
                 fp += 1
 
     assert tp + fp + tn + fn == len(actual), "Class labels should be binary (1 or 0)"
+    if verbose:
+        return [tp,fp, tn, fn]
+
     res = [fp / (fp + tn) if (fp + tn) != 0 else 0,  # FAR
            fn / (tp + fn) if (tp + fn) != 0 else 0,  # FRR
            (tp + tn) / (tp + tn + fp + fn) if (tp + tn + fp + fn) != 0 else 0,  # TPR
