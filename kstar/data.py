@@ -34,8 +34,8 @@ def pick_n(data, n):
 
 
 data_transformations = [
-    lambda x: pad_trim(np.flip(x, axis=0), size=self.mean_length)[:, 0:1].flatten(),
-    lambda x: pad_trim(np.flip(x, axis=0), size=self.mean_length)[:, 1:2].flatten(),
+    lambda x: pad_trim(np.flip(x, axis=0), size=50)[:, 0:1].flatten(),
+    lambda x: pad_trim(np.flip(x, axis=0), size=50)[:, 1:2].flatten(),
     lambda x: pad_trim(x, size=50)[:, 0:1].flatten(),
     lambda x: pad_trim(x, size=50)[:, 1:2].flatten(),
     lambda x: pad_trim(x[:5], size=50)[:, 0:2].flatten(),
@@ -46,7 +46,9 @@ data_transformations = [
 ]
 
 keystroke_data_transformation = [
-        lambda x: np.histogram(x, bins=50)[0].flatten()
+    lambda x: np.histogram(x, bins=50)[0].flatten(),
+    lambda x: np.histogram(x, bins=50, range=(1, 200))[0].flatten(),
+    lambda x: np.histogram(x, bins=50, range=(1,1000))[0].flatten(),
 ]
 
 def calculate_dataset_size(data, user, source_ratio=(1.0, 1.0)):
