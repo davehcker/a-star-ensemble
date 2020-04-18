@@ -55,7 +55,7 @@ class _Ensemble:
 class Ensemble(_Ensemble):
     """Generate an ensemble model for combining multiple modalities"""
 
-    def __init__(self, y=1, build=False, data_transformations=None):
+    def __init__(self, y=1, build=False, data_transformations=None, keyboard=False):
 
         self.trainX, self.trainY, self.testX, self.testY = None, None, None, None
 
@@ -65,11 +65,19 @@ class Ensemble(_Ensemble):
 
         self.trained = False
         self.optimized = False
+        self.min_max = None
 
         if data_transformations:
             self.data_transformations = data_transformations
 
-    def build_dataset(self, trainX, testX, trainY, testY):
+        if keyboard:
+            self.data_transformations = [
+                lambda x: np.histogram(x, bins=50)[0].flatten(),
+                lambda x: np.histogram(x, bins=50, range=self.min_max)[0].flatten(),
+                lambda x: np.histogram(x, bins=10, range=self.min_max)[0].flatten(),
+            ]
+
+    def build_dataset(self, trainX, testX, trainY, testY, min_max=False):
         """ Build the dataset that would be used in training and optimization
 
         """
@@ -80,13 +88,22 @@ class Ensemble(_Ensemble):
         self.testY = np.array(testY)
         assert all([len(_)!=0 for _ in trainX]), "traind data with length 0"
         assert all([len(_)!=0 for _ in testX]), "train data with length 0"
-        assert len(set(testY)) == 2
-        assert len(set(trainY)) == 2
+        assert len(set(testY)) == 2, print(testY)
+        assert len(set(trainY)) == 2, print(trainY)
 
         self.mean_length = int(np.mean([len(_) for _ in
                                         list(map(lambda x: x[0],
                                         filter(lambda x: x[1] == 1,
                                         zip(self.testX, self.testY))))]))
+
+        if min_max:
+            min_max = np.array([np.array([np.min(_), np.max(_)]) for _ in
+                                        list(map(lambda x: x[0],
+                                        filter(lambda x: x[1] == 1,
+                                        zip(self.testX, self.testY))))])
+            self.min_max = (int(np.median(min_max[:,0])), int(np.median(min_max[:,1])))
+        else:
+            self.min_max = None
 
 
     def build_ensemble(self, models=None):
@@ -136,3 +153,4 @@ def train_ensemble(ensemble: Ensemble, population=0, generations=10):
             single_model.tpr += perf[2]
 
     return models
+
